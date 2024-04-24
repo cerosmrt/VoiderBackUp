@@ -1,0 +1,73 @@
+from tkinter import Tk, Canvas, Entry, font
+from collections import deque
+import os
+import random
+
+def get_random_section(void_dir, encoding='utf-8'):
+    files = [f for f in os.listdir(void_dir) if f.endswith('.txt')]
+    if not files:
+        return None
+    file_path = os.path.join(void_dir, random.choice(files))
+    with open(file_path, 'r', encoding=encoding) as file:
+        text = file.read()
+        sections = text.split('\n\n')  # Split the text into sections
+        return random.choice(sections) if sections else None
+
+def adjust_width(event=None):
+    entry.config(width=len(entry.get()) + 1)
+
+def add_phrase(event=None):
+    void_dir = os.path.join(os.getcwd(), 'void')
+    file_path = os.path.join(void_dir, '0.txt')
+    with open(file_path, 'a', encoding='utf-8') as file:
+        file.write('\n\n' + entry.get())
+    entry.delete(0, 'end')
+
+def next_phrase(event=None):
+    void_dir = os.path.join(os.getcwd(), 'void')
+    random_section = get_random_section(void_dir)
+    if random_section:
+        entry.delete(0, 'end')
+        entry.insert(0, random_section)
+        adjust_width()
+
+def previous_phrase(event=None):
+    void_dir = os.path.join(os.getcwd(), 'void')
+    random_section = get_random_section(void_dir)
+    if random_section:
+        entry.delete(0, 'end')
+        entry.insert(0, random_section)
+        adjust_width()
+
+root = Tk()
+root.title("My Tkinter Interface")
+root.attributes("-fullscreen", True)
+
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+thickness = 10
+
+canvas = Canvas(root, highlightthickness=0)
+canvas.pack(fill="both", expand=True)
+
+center_x = screen_width // 2
+center_y = screen_height // 2
+
+radius = min(screen_width, screen_height) // 2 - thickness - 25
+canvas.create_oval(center_x - radius, center_y - radius, center_x + radius, center_y + radius, outline="white", width=thickness)
+
+entry_font = font.Font(family="Consolas" ,size=11)
+entry = Entry(root, borderwidth=0, highlightthickness=0, bg="black", fg="white", justify="center", font=entry_font)
+entry.place(x=center_x, y=center_y, anchor="center")
+
+entry.bind("<KeyRelease>", adjust_width)  # Bind adjust_width to the <KeyRelease> event
+entry.bind("<Return>", add_phrase)  # Bind add_phrase to the <Return> event
+root.bind("<Right>", next_phrase)
+root.bind("<Left>", previous_phrase)
+
+phrases = deque(maxlen=100)  # Initialize a deque with a maximum length of 100
+
+canvas.configure(bg="black")
+
+root.mainloop()
